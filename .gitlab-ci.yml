@@ -1,0 +1,164 @@
+image:
+  name: docker/compose:1.29.2
+services:
+  - docker:dind
+before_script:
+  - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+stages:
+  - staging-build
+  - staging-deploy
+  - staging-notification
+  - production-build
+  - production-deploy
+  - production-notification
+
+variables:
+  ECR_REGISTRY: 782057639577.dkr.ecr.eu-west-2.amazonaws.com
+  AWS_DEFAULT_REGION: eu-west-2
+  APP_NAME: xnames-dapp-stg
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+
+
+Staging Build:
+  stage: staging-build
+  before_script:
+    - apk add --no-cache curl jq python3 py3-pip
+    - pip install awscli
+    - apk add --no-cache openssh-client bash
+    - aws ecr get-login-password | docker login --username AWS --password-stdin 782057639577.dkr.ecr.eu-west-2.amazonaws.com
+  script:
+    - echo "Building Image..."
+#    - chmod +x setup_env_stg.sh
+#    - bash setup_env_stg.sh
+    - docker build  -f Dockerfile_stg -t 782057639577.dkr.ecr.eu-west-2.amazonaws.com/xnames-dapp-stg:latest .
+    - docker push 782057639577.dkr.ecr.eu-west-2.amazonaws.com/xnames-dapp-stg:latest
+  only:
+    - staging
+
+
+Staging Deployment:
+  stage: staging-deploy
+  image: docker:stable
+  script:
+    - apk add --no-cache curl jq python3 py3-pip
+    - pip install awscli
+    - apk add --no-cache openssh-client bash
+#    - chmod +x setup_env_stg.sh
+#    - bash setup_env_stg.sh
+    - aws ecr get-login-password | docker login --username AWS --password-stdin 782057639577.dkr.ecr.eu-west-2.amazonaws.com
+    - mkdir -p ~/.ssh
+    - echo "$PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod 700 ~/.ssh/id_rsa
+    - eval "$(ssh-agent -s)"
+    - ssh-add ~/.ssh/id_rsa
+    - ssh-keyscan -H 'gitlab.com' >> ~/.ssh/known_hosts
+    - chmod +x deploy_docker_stg.sh
+    - scp  -o StrictHostKeyChecking=no -r Dockerfile_stg  ubuntu@$STAGING_SERVER:/home/ubuntu/staging/xnames-dapp-stg
+    - bash deploy_docker_stg.sh
+  only:
+    - staging
+
+Staging Notification Pass:
+  stage: staging-notification
+  image: docker:stable
+  services:
+    - docker:dind
+  script:
+    - apk add --update curl
+    - 'curl -X POST -H "Content-type: application/json" --data "{\"text\":\"🟢 Xnames Dapp Staging Deployed by $CI_COMMIT_AUTHOR\"}" {$SLACK_URL}'
+  only:
+    - staging
+  when: on_success
+Staging Notification Fail:
+  stage: staging-notification
+  image: docker:stable
+  services:
+    - docker:dind
+  script:
+    - apk add --update curl
+    - 'curl -X POST -H "Content-type: application/json" --data "{\"text\":\"🔴 Xnames Dapp Staging Deploy Failed by $CI_COMMIT_AUTHOR\"}" {$SLACK_URL}'
+  only:
+    - staging
+  when: on_failure
+  
+
+
+
+
+
+
+
+
+Production Build:
+  stage: production-build
+  before_script:
+    - apk add --no-cache curl jq python3 py3-pip
+    - pip install awscli
+    - apk add --no-cache openssh-client bash
+    - aws ecr get-login-password | docker login --username AWS --password-stdin 782057639577.dkr.ecr.eu-west-2.amazonaws.com
+  script:
+    - echo "Building Image..."
+#    - chmod +x setup_env_prod.sh
+#    - bash setup_env_prod.sh
+    - docker build  -f Dockerfile_prod -t 782057639577.dkr.ecr.eu-west-2.amazonaws.com/xnames-dapp-prod:latest .
+    - docker push 782057639577.dkr.ecr.eu-west-2.amazonaws.com/xnames-dapp-prod:latest
+  only:
+    - main
+
+
+Production Deployment:
+  stage: production-deploy
+  image: docker:stable
+  script:
+    - apk add --no-cache curl jq python3 py3-pip
+    - pip install awscli
+    - apk add --no-cache openssh-client bash
+#    - chmod +x setup_env_prod.sh
+#    - bash setup_env_prod.sh
+    - aws ecr get-login-password | docker login --username AWS --password-stdin 782057639577.dkr.ecr.eu-west-2.amazonaws.com
+    - mkdir -p ~/.ssh
+    - echo "$PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod 700 ~/.ssh/id_rsa
+    - eval "$(ssh-agent -s)"
+    - ssh-add ~/.ssh/id_rsa
+    - ssh-keyscan -H 'gitlab.com' >> ~/.ssh/known_hosts
+    - chmod +x deploy_docker_prod.sh
+    - scp  -o StrictHostKeyChecking=no -r Dockerfile_prod  ubuntu@$PROD_SERVER:/home/ubuntu/production/xnames-dapp-prod
+    - bash deploy_docker_prod.sh
+  only:
+    - main
+
+Production Notification Pass:
+  stage: production-notification
+  image: docker:stable
+  services:
+    - docker:dind
+  script:
+    - apk add --update curl
+    - curl -s
+      "https://api.telegram.org/bot{$TELEGRAM_TOKEN}/sendMessage"
+      -F chat_id=$TELEGRAM_CHAT_ID
+      -F text="🟢 Xnames Dapp Production Deployed by {$CI_COMMIT_AUTHOR}"
+    - 'curl -X POST -H "Content-type: application/json" --data "{\"text\":\"🟢 Xnames Dapp Production Deployed by $CI_COMMIT_AUTHOR\"}" {$SLACK_URL}'
+  only:
+    - main-
+  when: on_success
+
+Production Notification Fail:
+  stage: production-notification
+  image: docker:stable
+  services:
+    - docker:dind
+  script:
+    - apk add --update curl
+    - curl -s
+      "https://api.telegram.org/bot{$TELEGRAM_TOKEN}/sendMessage"
+      -F chat_id=$TELEGRAM_CHAT_ID
+      -F text="🔴 Xnames Dapp Production Deploy Failed by {$CI_COMMIT_AUTHOR}"
+    - 'curl -X POST -H "Content-type: application/json" --data "{\"text\":\"🔴 Xnames Dapp Production Deploy Failed by $CI_COMMIT_AUTHOR\"}" {$SLACK_URL}'
+  only:
+    - main-
+  when: on_failure
+  

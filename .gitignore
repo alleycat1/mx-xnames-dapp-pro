@@ -1,0 +1,12 @@
+# Don't check auto-generated stuff into git
+coverage
+build
+node_modules
+yarn.lock
+.vscode
+.idea
+.DS_Store
+.env
+.env.staging
+.env.production
+dist

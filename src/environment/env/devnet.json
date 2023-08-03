@@ -1,0 +1,10 @@
+{
+  "type": "devnet",
+  "contracts": {
+    "pingPong": "erd1qqqqqqqqqqqqqpgq72l6vl07fkn3alyfq753mcy4nakm0l72396qkcud5x",
+    "xNames": "erd1qqqqqqqqqqqqqpgqllkrx953x85zltx6j5az5x4ujywgj6huqdvsnhlmt8"
+  },
+  "mvx": {
+    "apiUrl": "https://devnet-api.multiversx.com"
+  }
+}

@@ -1,0 +1,22 @@
+FROM node:16.10.0 as build
+
+WORKDIR /usr/src/app
+
+RUN npm config set "@fortawesome:registry" https://npm.fontawesome.com/
+RUN npm config set "//npm.fontawesome.com/:_authToken" "1E2D4E75-C879-4244-9241-F8EE33DE9BE8"
+
+COPY package*.json ./
+
+# RUN yarn add @fortawesome/fontawesome-pro
+# RUN yarn add @fortawesome/fontawesome
+
+
+RUN yarn install
+COPY . .
+RUN yarn build:devnet
+
+#CMD ["yarn", "start:devnet"]
+
+ FROM nginx
+ COPY ./nginx-stg.conf /etc/nginx/conf.d/default.conf
+ COPY --from=build /usr/src/app/dist /usr/share/nginx/html

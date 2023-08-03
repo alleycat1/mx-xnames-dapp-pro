@@ -1,0 +1,256 @@
+{
+  "buildInfo": {
+    "rustc": {
+      "version": "1.69.0-nightly",
+      "commitHash": "658fad6c5506f41c35b64fb1a22ceb0992697ff3",
+      "commitDate": "2023-02-03",
+      "channel": "Nightly",
+      "short": "rustc 1.69.0-nightly (658fad6c5 2023-02-03)"
+    },
+    "contractCrate": {
+      "name": "xn-main",
+      "version": "0.0.1"
+    },
+    "framework": {
+      "name": "multiversx-sc",
+      "version": "0.39.8"
+    }
+  },
+  "docs": [
+    "A contract that allows anyone to send a fixed sum, locks it for a while and then allows users to take it back.",
+    "Sending funds to the contract is called \"ping\".",
+    "Taking the same funds back is called \"pong\".",
+    "",
+    "Restrictions:",
+    "- Only the set amount can be `ping`-ed, no more, no less.",
+    "- `pong` can only be called after a certain period after `ping`."
+  ],
+  "name": "XnMain",
+  "constructor": {
+    "inputs": [],
+    "outputs": []
+  },
+  "endpoints": [
+    {
+      "name": "register_or_renew",
+      "mutability": "mutable",
+      "payableInTokens": ["EGLD"],
+      "inputs": [
+        {
+          "name": "domain_name",
+          "type": "bytes"
+        },
+        {
+          "name": "years",
+          "type": "u8"
+        },
+        {
+          "name": "assign_to",
+          "type": "optional<Address>",
+          "multi_arg": true
+        }
+      ],
+      "outputs": [
+        {
+          "type": "DomainName"
+        }
+      ]
+    },
+    {
+      "name": "update",
+      "mutability": "mutable",
+      "inputs": [
+        {
+          "name": "domain_name",
+          "type": "bytes"
+        },
+        {
+          "name": "assignTo",
+          "type": "Address"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "delete",
+      "mutability": "mutable",
+      "inputs": [
+        {
+          "name": "domain_name",
+          "type": "bytes"
+        },
+        {
+          "name": "assignTo",
+          "type": "Address"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "consent",
+      "mutability": "mutable",
+      "inputs": [
+        {
+          "name": "domain_name",
+          "type": "bytes"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "ping",
+      "mutability": "mutable",
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "Address"
+        }
+      ]
+    },
+    {
+      "name": "revokeConsentRequest",
+      "mutability": "mutable",
+      "inputs": [
+        {
+          "name": "domain_name",
+          "type": "bytes"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "reserve",
+      "onlyOwner": true,
+      "mutability": "mutable",
+      "inputs": [
+        {
+          "name": "reservations",
+          "type": "variadic<Reservation>",
+          "multi_arg": true
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "set_prices",
+      "onlyOwner": true,
+      "mutability": "mutable",
+      "inputs": [
+        {
+          "name": "address",
+          "type": "Address"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "get_consent_request",
+      "mutability": "readonly",
+      "inputs": [
+        {
+          "name": "address",
+          "type": "Address"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "get_domain_name",
+      "mutability": "readonly",
+      "inputs": [
+        {
+          "name": "domain_name",
+          "type": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "DomainName"
+        }
+      ]
+    },
+    {
+      "name": "get_owner_domain_name",
+      "mutability": "readonly",
+      "inputs": [
+        {
+          "name": "address",
+          "type": "Address"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "get_resolve_domain_name",
+      "mutability": "readonly",
+      "inputs": [
+        {
+          "name": "domain_name",
+          "type": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "Address"
+        }
+      ]
+    },
+    {
+      "name": "get_price",
+      "mutability": "readonly",
+      "inputs": [
+        {
+          "name": "domain_len",
+          "type": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "BigUint"
+        }
+      ]
+    }
+  ],
+  "events": [],
+  "hasCallback": false,
+  "types": {
+    "DomainName": {
+      "type": "struct",
+      "fields": [
+        {
+          "name": "name",
+          "type": "bytes"
+        },
+        {
+          "name": "expires_at",
+          "type": "u64"
+        }
+      ]
+    },
+    "Reservation": {
+      "type": "struct",
+      "fields": [
+        {
+          "name": "domain_name",
+          "type": "bytes"
+        },
+        {
+          "name": "until",
+          "type": "u64"
+        },
+        {
+          "name": "reserved_for",
+          "type": "Address"
+        }
+      ]
+    }
+  }
+}

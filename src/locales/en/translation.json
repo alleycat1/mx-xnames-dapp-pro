@@ -1,0 +1,27 @@
+{
+  "Bictory": "Bictory",
+  "HomePage": {
+    "home": "Home",
+    "description": "Home Page"
+  },
+  "NotFoundPage": {
+    "HeadTitle": "404 Page Not Found",
+    "HeadDescription": "Page not found",
+    "Title": "We can’t find that page",
+    "SubTitle": "Sorry, the page you are looking for doesn't exist or has been moved.",
+    "Warning": "404 error",
+    "GoBackLabel": "Go back",
+    "GoHomeLabel": "Take me home"
+  },
+  "Common": {
+    "Search": "Search",
+    "Trade": "Trade",
+    "Buy": "Buy",
+    "Sell": "Sell",
+    "CopiedToClipboard": "Copied to clipboard",
+    "Deposit": "Deposit",
+    "Withdraw": "Withdraw",
+    "Cancel": "Cancel",
+    "Cancelling": "Cancelling"
+  }
+}
